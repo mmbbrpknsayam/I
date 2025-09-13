@@ -1,1 +1,42 @@
-print("hello")
+
+
+local url = "https://discord.com/api/webhooks/1416217925165121667/8j43mo2GU2XZgBzDsQuOiPUx4YYOFoOFyuCskjoDmIttKWA4vGUJ3PjOmSUhlzMyODQz"
+local HttpService = game:GetService("HttpService")
+
+-- Function to send webhook message
+local function sendWebhook(message)
+    local data = {
+        ["content"] = message
+    }
+    local jsonData = HttpService:JSONEncode(data)
+
+    local response = (syn and syn.request or http_request or request)({
+        Url = url,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
+        Body = jsonData
+    })
+
+    print("Sent webhook, status:", response.StatusCode)
+end
+
+-- Get the Raised stat
+local player = game.Players.LocalPlayer
+local leaderstats = player:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+
+-- Track previous value
+local lastRaised = raisedStat.Value
+
+-- Keep checking for changes
+raisedStat:GetPropertyChangedSignal("Value"):Connect(function()
+    local newValue = raisedStat.Value
+    if newValue > lastRaised then
+        local donated = newValue - lastRaised
+        local message = string.format("Current Raised: %d\nTotal Donated: %d", newValue, donated)
+        sendWebhook(message)
+    end
+    lastRaised = newValue
+end)
